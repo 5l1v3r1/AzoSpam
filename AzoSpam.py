@@ -18,11 +18,93 @@ glob_windowsversion = []
 glob_cookiedomains = []
 glob_ip = ""
 glob_countrycode = ""
-glob_fakecredentials = ""
+glob_fakecredentials = []
 glob_fakesysteminfo = ""
 glob_systeminfo = ""
+glob_architecture = ""
 
-count_fake_credentials = 10
+fake_reports = 1
+glob_count_fake_credentials = 0
+
+# Defined in index.php of the panel; Seems to be static at least all samples I saw had the same guid
+unical_guid = "DV8CF101-053A-4498-98VA-EAB3719A088W-VF9A8B7AD-0FA0-4899-B4RD-D8006738DQCD"
+
+xor_key = chr(13) + chr(10) + chr(200)
+
+
+def CB_XORm(data, key, max):
+    datalen = len(data);
+    keylen = len(key);
+    if (datalen >= max):
+        datalen = max;
+
+    j = 0;
+    i = 0;
+
+    while i < datalen:
+        data[i] = chr(data[i] ^ ord(key[j]));
+        j = j + 1;
+        if (j > (keylen - 1)):
+            j = 0;
+        i = i + 1;
+    return data;
+
+
+def create_fakearchitecture():
+    bool = random.randint(0,1)
+    if bool == 0:
+        return "x64"
+    else:
+        return "x86"
+
+def write_outputfile():
+    # Info part:
+    outputfile = ""
+    outputfile += "<info" + unical_guid + ">" + glob_guid + "|" + glob_windowsversion[1] + "|" + glob_windowsversion[0] + "|"
+    outputfile += glob_architecture + "|" + glob_hostname + "|" + glob_username + "|" + str(glob_count_fake_credentials) + "|"
+    outputfile += "0|0|0|" # BTC | CC | Files - Will be added in future release
+    outputfile += "E|U" # Executable | User rights
+    outputfile += "</info" + unical_guid + ">"
+
+    # pwd part:
+    '''
+    Types:
+    1 = Browsers
+    2 = FTP Clients
+    3 = Mail Clients
+    4 = IM Clients
+    '''
+    outputfile += "<pwd" + unical_guid + ">"
+
+    '''
+    cred = []
+        cred.append(random.randint(1, 4))
+        cred.append(soft)
+        cred.append(host)
+        cred.append(username)
+        cred.append(password)
+    '''
+    for cred in glob_fakecredentials:
+        outputfile += str(cred[0]) + "|" + cred[1] + "|" + cred[2] + "|" + cred[3] + "|" + cred[4] + "|\n"
+
+    outputfile += "</pwd" + unical_guid + ">"
+
+    # Cookies Part:
+    outputfile += "<coks" + unical_guid + ">"
+    for cookie in glob_cookiedomains:
+        outputfile += cookie + "\n"
+        print cookie
+    outputfile += "</coks" + unical_guid + ">"
+
+    # File Part:
+    outputfile += "<file" + unical_guid + ">"
+    outputfile += "</file" + unical_guid + ">"
+
+    resultfile = open("output.dat", "wb")
+    resultfile.write(outputfile)
+
+    return outputfile
+
 
 def create_fakeversion():
     p1 = random.randint(1,16)
@@ -97,7 +179,6 @@ def create_fakesysteminfo():
     fakesysteminfo += "\t" + fake_filename + "\n"
     fakesysteminfo += "\n\n"
     fakesysteminfo += "[SOFT]\n\n"
-    print fakesysteminfo
 
     with open(fileSoftware) as sName:
         possible_software = sName.read().splitlines()
@@ -106,7 +187,6 @@ def create_fakesysteminfo():
         bool = random.randint(0,1)
         if bool == 1:
             installed_software.append(s.strip() + " (" + create_fakeversion() + ")")
-            print s + " (" + create_fakeversion() + ")"
 
 
 def create_fakepassword():
@@ -126,6 +206,13 @@ def create_fakecredentialdomain():
 
 
 def create_fakecredentials():
+    '''
+    Types:
+    1 = Browsers
+    2 = FTP Clients
+    3 = Mail Clients
+    4 = IM Clients
+    '''
     fake_credentials = []
 
     password_type = ["7Star",
@@ -175,24 +262,28 @@ def create_fakecredentials():
                      "WinSCP",
                      "YandexBrowser"]
 
+    number_credentials = random.randint(7, 20)
+    global glob_count_fake_credentials
+    glob_count_fake_credentials = number_credentials
+
     i = 0
-    while i <= count_fake_credentials:
+    while i <= number_credentials:
         soft = password_type[random.randint(0, len(password_type) - 1)]
         host = create_fakecredentialdomain()
         username = create_username()
         password = create_fakepassword()
 
-        cred = "SOFT:\t\t" + soft + "\n"
-        cred += "HOST:\t\t" + host + "\n"
-        cred += "USER:\t\t" + username + "\n"
-        cred += "PASS:\t\t" + password
-        cred += "\n"
+        cred = []
+        cred.append(random.randint(1, 4))
+        cred.append(soft)
+        cred.append(host)
+        cred.append(username)
+        cred.append(password)
 
         fake_credentials.append(cred)
-        print cred
         i = i + 1
 
-        return fake_credentials
+    return fake_credentials
 
 
 def create_countrycode():
@@ -336,14 +427,10 @@ glob_ip = create_fakeip()
 glob_countrycode = create_countrycode()
 glob_fakecredentials = create_fakecredentials()
 glob_systeminfo = create_fakesysteminfo()
+glob_architecture = create_fakearchitecture()
 
+write_outputfile()
 
-print "Hostname: " + glob_hostname
-print "Username: " + glob_username
-print "Mail: " + glob_email
-print "Guid: " + glob_guid
-print "Windows Version: " + glob_windowsversion[0]
-print "Windows Version Code: " + glob_windowsversion[1]
-print "IP: " + glob_ip
-print "Anzahl Cookies: " + str(len(glob_cookiedomains))
-print "ISO Country-Code: " + glob_countrycode
+input_byte = bytearray(open("output.dat", 'rb').read())
+
+print CB_XORm(input_byte, xor_key, 1024*512)
