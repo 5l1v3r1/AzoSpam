@@ -1,12 +1,14 @@
 import random, string
 from ipaddress import IPv4Address
 from random import getrandbits
+from time import gmtime, strftime
 
 fileFirstnames = "first-names.txt"
 fileLastnames = "last-names.txt"
 fileEmails = "mail-domains.txt"
 fileDomains = "domains.txt"
 fileCountrycodes = "iso_country_codes.txt"
+fileSoftware = "applications.txt"
 
 glob_hostname = ""
 glob_username = ""
@@ -16,8 +18,96 @@ glob_windowsversion = []
 glob_cookiedomains = []
 glob_ip = ""
 glob_countrycode = ""
+glob_fakecredentials = ""
+glob_fakesysteminfo = ""
+glob_systeminfo = ""
 
 count_fake_credentials = 10
+
+def create_fakeversion():
+    p1 = random.randint(1,16)
+    p2 = random.randint(1, 4000)
+    p3 = random.randint(1, 9999)
+    p4 = random.randint(1, 9999)
+
+    return str(p1) + "." + str(p2) + "." + str(p3) + "." + str(p4)
+
+def create_fakesysteminfo():
+    fake_filename = create_fakepassword() + ".exe"
+    possible_software = []
+    installed_software = []
+
+    fakesysteminfo = ""
+    fakesysteminfo += "E\n"
+    fakesysteminfo += "MachineID\t:\t" + glob_guid + "\n"
+    fakesysteminfo += "EXE_PATH\t:\tC:\\Users\\" + glob_username + "\\AppData\\Local\\Temp\\" + fake_filename + "\n"
+    fakesysteminfo += "\n"
+    fakesysteminfo += "Windows\t:\t" + glob_windowsversion[1] + " " + glob_windowsversion[0] + "\n"
+    fakesysteminfo += "Computer(Username)\t:\t" + glob_hostname + "(" + glob_username + ")" + "\n"
+    fakesysteminfo += "Screen: 1680x1050\n"
+    fakesysteminfo += "Layouts: EN/" + glob_countrycode.upper() + "\n"
+    fakesysteminfo += "LocalTime: " + strftime("%d/%m/%Y %H:%M:%S", gmtime()) + "\n"
+    fakesysteminfo += "Zone: UTC+" + str(random.randint(1,5)) + ":0" + "\n"
+    fakesysteminfo += "\n"
+    fakesysteminfo += "CPU Model: Intel(R)" + "\n"
+    fakesysteminfo += "CPU Count: 2\n"
+    fakesysteminfo += "GetRAM: 4096\n"
+    fakesysteminfo += "Video Info\n"
+    fakesysteminfo += "Default VGA Graphics Adapter\n"
+    fakesysteminfo += "RDPDD Chained DD\n"
+    fakesysteminfo += "RDP Encoder Mirror Driver\n"
+    fakesysteminfo += "RDP Reflector Display Driver\n"
+    fakesysteminfo += "\n\n"
+
+    fakesysteminfo += "[System Process]\n"
+    fakesysteminfo += "System\n"
+    fakesysteminfo += "\t\tsmss.exe\n"
+    fakesysteminfo += "csrss.exe\n"
+    fakesysteminfo += "wininit.exe\n"
+    fakesysteminfo += "\tservices.exe\n"
+    fakesysteminfo += "\t\tsvchost.exe\n"
+    fakesysteminfo += "\t\t\tWmiPrvSE.exe\n"
+    fakesysteminfo += "\t\tsvchost.exe\n"
+    fakesysteminfo += "\t\tsvchost.exe\n"
+    fakesysteminfo += "\t\t\taudiodg.exe\n"
+    fakesysteminfo += "\t\tsvchost.exe\n"
+    fakesysteminfo += "\t\t\tdwm.exe\n"
+    fakesysteminfo += "\t\tsvchost.exe\n"
+    fakesysteminfo += "\t\t\ttaskeng.exe\n"
+    fakesysteminfo += "\t\tsvchost.exe\n"
+    fakesysteminfo += "\t\tspoolsv.exe\n"
+    fakesysteminfo += "\t\tsvchost.exe\n"
+    fakesysteminfo += "\t\tsvchost.exe\n"
+    fakesysteminfo += "\t\tsvchost.exe\n"
+    fakesysteminfo += "\t\tsppsvc.exe\n"
+    fakesysteminfo += "\t\tSearchIndexer.exe\n"
+    fakesysteminfo += "\t\tsvchost.exe\n"
+    fakesysteminfo += "\t\ttaskhost.exe\n"
+    fakesysteminfo += "\t\twmpnetwk.exe\n"
+    fakesysteminfo += "\tlsass.exe\n"
+    fakesysteminfo += "\tlsm.exe\n"
+    fakesysteminfo += "csrss.exe\n"
+    fakesysteminfo += "\tconhost.exe\n"
+    fakesysteminfo += "winlogon.exe\n"
+    fakesysteminfo += "explorer.exe\n"
+    fakesysteminfo += "\tchrome.exe\n"
+    fakesysteminfo += "\t\tchrome.exe\n"
+    fakesysteminfo += "\t\tchrome.exe\n"
+    fakesysteminfo += "\t\tchrome.exe\n"
+    fakesysteminfo += "\t" + fake_filename + "\n"
+    fakesysteminfo += "\n\n"
+    fakesysteminfo += "[SOFT]\n\n"
+    print fakesysteminfo
+
+    with open(fileSoftware) as sName:
+        possible_software = sName.read().splitlines()
+
+    for s in possible_software:
+        bool = random.randint(0,1)
+        if bool == 1:
+            installed_software.append(s.strip() + " (" + create_fakeversion() + ")")
+            print s + " (" + create_fakeversion() + ")"
+
 
 def create_fakepassword():
     min_length = 4
@@ -101,6 +191,8 @@ def create_fakecredentials():
         fake_credentials.append(cred)
         print cred
         i = i + 1
+
+        return fake_credentials
 
 
 def create_countrycode():
@@ -234,31 +326,17 @@ def create_mailaddress():
     return glob_email
 
 
-
 glob_hostname = create_hostname()
-
-
 glob_username = create_username()
-
-
 glob_email = create_mailaddress()
-
-
 glob_guid = create_guid()
-
-
 glob_windowsversion = create_windsversion()
-
-
 glob_cookiedomains = create_cookielist()
-
-
 glob_ip = create_fakeip()
-
-
 glob_countrycode = create_countrycode()
+glob_fakecredentials = create_fakecredentials()
+glob_systeminfo = create_fakesysteminfo()
 
-create_fakecredentials()
 
 print "Hostname: " + glob_hostname
 print "Username: " + glob_username
