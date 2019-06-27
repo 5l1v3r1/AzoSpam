@@ -2,6 +2,12 @@ import random, string
 from ipaddress import IPv4Address
 from random import getrandbits
 from time import gmtime, strftime
+import urllib2
+import urllib
+import os
+import shutil
+import zipfile
+
 
 fileFirstnames = "first-names.txt"
 fileLastnames = "last-names.txt"
@@ -20,16 +26,99 @@ glob_ip = ""
 glob_countrycode = ""
 glob_fakecredentials = []
 glob_fakesysteminfo = ""
-glob_systeminfo = ""
 glob_architecture = ""
 
-fake_reports = 1
+fake_reports = 10
 glob_count_fake_credentials = 0
 
 # Defined in index.php of the panel; Seems to be static at least all samples I saw had the same guid
 unical_guid = "DV8CF101-053A-4498-98VA-EAB3719A088W-VF9A8B7AD-0FA0-4899-B4RD-D8006738DQCD"
 
 xor_key = chr(13) + chr(10) + chr(200)
+
+url = "http://example.com/index.php"
+
+def create_zip():
+    if os.path.isdir("output"):
+        shutil.rmtree("output")
+
+    os.makedirs("output/Browsers/AutoComplete")
+    os.makedirs("output/Browsers/Cookies")
+    os.makedirs("output/Browsers/History")
+
+    # Cookies:
+    fileCookieList = open("output/CookieList.txt", "w")
+    for cookie in glob_cookiedomains:
+        fileCookieList.write(cookie + "\n")
+    fileCookieList.close()
+
+    # IP / Countrycode:
+    fileip = open("output/ip.txt", "w")
+    fileip.write(glob_ip + ":" + glob_countrycode)
+    fileip.close()
+
+    # Credentials:
+    filePasswordsList = open("output/PasswordsList.txt", "w")
+    credentials = ""
+
+    for cred in glob_fakecredentials:
+        temp = ""
+        temp += "SOFT:\t\t" + cred[1] + "\n"
+        temp += "HOST:\t\t" + cred[2] + "\n"
+        temp += "USER:\t\t" + cred[3] + "\n"
+        temp += "PASS:\t\t" + cred[4] + "\n"
+        temp += "UNKN:\t\t\n\n"
+
+        credentials += temp
+
+    filePasswordsList.write(credentials)
+    filePasswordsList.close()
+
+    # Systeminfo:
+    fileSystem = open("output/System.txt", "w")
+    fileSystem.write(glob_fakesysteminfo)
+    fileSystem.close()
+
+    # Create empty files - will be added in a future version:
+    with open("output/Browsers/AutoComplete/GoogleChrome_Default.txt", 'a'):
+        os.utime("output/Browsers/AutoComplete/GoogleChrome_Default.txt", None)
+
+    with open("output/Browsers/AutoComplete/GoogleChrome_Default.txt", 'a'):
+        os.utime("output/Browsers/AutoComplete/GoogleChrome_Default.txt", None)
+
+    with open("output/Browsers/Cookies/GoogleChrome_Default.txt", 'a'):
+        os.utime("output/Browsers/Cookies/GoogleChrome_Default.txt", None)
+        
+    with open("output/Browsers/Cookies/InternetExplorer.txt", 'a'):
+        os.utime("output/Browsers/Cookies/InternetExplorer.txt", None)
+
+    with open("output/Browsers/Cookies/InternetExplorerLow.txt", 'a'):
+        os.utime("output/Browsers/Cookies/InternetExplorerLow.txt", None)
+
+    with open("output/Browsers/History/GoogleChrome_Default.txt", 'a'):
+        os.utime("output/Browsers/History/GoogleChrome_Default.txt", None)
+
+    '''
+    zipf = zipfile.ZipFile('output.zip', 'w', zipfile.ZIP_DEFLATED)
+
+    for root, dirs, files in os.walk("output"):
+        for file in files:
+            zipf.write(os.path.join(root, file))
+
+    zipf.close()
+    '''
+
+    shutil.make_archive("output", "zip", "output")
+
+def cleanup_files():
+    # Temporary encrypted file which is sent to server
+    if os.path.exists("output.dat"):
+        os.remove("output.dat")
+    if os.path.exists("output.zip"):
+        os.remove("output.zip")
+
+    # Delete temp folder which was used as base for the zip
+    shutil.rmtree("output")
 
 
 def CB_XORm(data, key, max):
@@ -74,7 +163,7 @@ def write_outputfile():
     3 = Mail Clients
     4 = IM Clients
     '''
-    outputfile += "<pwd" + unical_guid + ">"
+    outputfile += "<pwds" + unical_guid + ">"
 
     '''
     cred = []
@@ -85,25 +174,26 @@ def write_outputfile():
         cred.append(password)
     '''
     for cred in glob_fakecredentials:
-        outputfile += str(cred[0]) + "|" + cred[1] + "|" + cred[2] + "|" + cred[3] + "|" + cred[4] + "|\n"
+        outputfile += str(cred[0]) + "|" + cred[1] + "|" + cred[2] + "|" + cred[3] + "|" + cred[4] + "|\r\n"
 
-    outputfile += "</pwd" + unical_guid + ">"
+    outputfile += "</pwds" + unical_guid + ">"
 
     # Cookies Part:
     outputfile += "<coks" + unical_guid + ">"
     for cookie in glob_cookiedomains:
-        outputfile += cookie + "\n"
-        print cookie
+        outputfile += cookie + "\r\n"
     outputfile += "</coks" + unical_guid + ">"
 
     # File Part:
     outputfile += "<file" + unical_guid + ">"
+    f = open("output.zip", "rb")
+    outputfile += f.read()
     outputfile += "</file" + unical_guid + ">"
 
     resultfile = open("output.dat", "wb")
     resultfile.write(outputfile)
 
-    return outputfile
+    return urllib.quote(outputfile)
 
 
 def create_fakeversion():
@@ -187,6 +277,11 @@ def create_fakesysteminfo():
         bool = random.randint(0,1)
         if bool == 1:
             installed_software.append(s.strip() + " (" + create_fakeversion() + ")")
+
+    for soft in installed_software:
+        fakesysteminfo += soft + "\n"
+
+    return fakesysteminfo
 
 
 def create_fakepassword():
@@ -416,21 +511,37 @@ def create_mailaddress():
     glob_email = glob_username + "@" + emails[random.randint(0, len(emails))]
     return glob_email
 
+i = 0
 
-glob_hostname = create_hostname()
-glob_username = create_username()
-glob_email = create_mailaddress()
-glob_guid = create_guid()
-glob_windowsversion = create_windsversion()
-glob_cookiedomains = create_cookielist()
-glob_ip = create_fakeip()
-glob_countrycode = create_countrycode()
-glob_fakecredentials = create_fakecredentials()
-glob_systeminfo = create_fakesysteminfo()
-glob_architecture = create_fakearchitecture()
+while i < fake_reports:
+    glob_hostname = create_hostname()
+    glob_username = create_username()
+    glob_email = create_mailaddress()
+    glob_guid = create_guid()
+    glob_windowsversion = create_windsversion()
+    glob_cookiedomains = create_cookielist()
+    glob_ip = create_fakeip()
+    glob_countrycode = create_countrycode()
+    glob_fakecredentials = create_fakecredentials()
+    glob_fakesysteminfo = create_fakesysteminfo()
+    glob_architecture = create_fakearchitecture()
 
-write_outputfile()
+    # Add all our informations to a ZIP file
+    create_zip()
 
-input_byte = bytearray(open("output.dat", 'rb').read())
+    # Write the unencrypted POST data to a file
+    write_outputfile()
 
-print CB_XORm(input_byte, xor_key, 1024*512)
+    # Read the file as byte array
+    input_byte = bytearray(open("output.dat", 'rb').read())
+
+    # Apply XOR key to our bytearray
+    result = CB_XORm(input_byte, xor_key, 1024*512)
+
+    # Post the result to the panel
+    req = urllib2.Request(url, result, {'Content-Type': 'application/octet-stream'})
+    reply = urllib2.urlopen(req)
+    i = i + 1
+    print "Report sent to " + url
+
+
