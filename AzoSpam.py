@@ -28,7 +28,7 @@ glob_fakecredentials = []
 glob_fakesysteminfo = ""
 glob_architecture = ""
 
-fake_reports = 10
+fake_reports = 1000
 glob_count_fake_credentials = 0
 
 # Defined in index.php of the panel; Seems to be static at least all samples I saw had the same guid
@@ -36,7 +36,7 @@ unical_guid = "DV8CF101-053A-4498-98VA-EAB3719A088W-VF9A8B7AD-0FA0-4899-B4RD-D80
 
 xor_key = chr(13) + chr(10) + chr(200)
 
-url = "http://example.com/index.php"
+url = "http://lusecproducts.top/ebuka/index.php"
 
 def create_zip():
     if os.path.isdir("output"):
@@ -144,7 +144,7 @@ def create_fakearchitecture():
     if bool == 0:
         return "x64"
     else:
-        return "x86"
+        return "x32"
 
 def write_outputfile():
     # Info part:
