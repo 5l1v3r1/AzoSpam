@@ -508,7 +508,7 @@ def create_mailaddress():
     with open(fileEmails) as fEmails:
         emails = fEmails.read().splitlines()
 
-    glob_email = glob_username + "@" + emails[random.randint(0, len(emails))]
+    glob_email = glob_username + "@" + emails[random.randint(0, len(emails) - 1)]
     return glob_email
 
 i = 0
