@@ -2,6 +2,7 @@ import random, string
 from ipaddress import IPv4Address
 from random import getrandbits
 from time import gmtime, strftime
+import time
 import urllib
 import urllib2
 import os
@@ -9,6 +10,9 @@ import shutil
 import socks
 from sockshandler import SocksiPyHandler # pip install PySocks
 import argparse
+from stem import Signal
+from stem.control import Controller
+import requests
 
 
 fileFirstnames = "first-names.txt"
@@ -39,6 +43,24 @@ unical_guid = "DV8CF101-053A-4498-98VA-EAB3719A088W-VF9A8B7AD-0FA0-4899-B4RD-D80
 xor_key = chr(13) + chr(10) + chr(200)
 
 url = ""
+
+def get_current_ip():
+    session = requests.session()
+    session.proxies = {}
+    session.proxies['http']='socks5h://localhost:9050'
+
+    try:
+        r = session.get('http://ipinfo.io/ip')
+    except Exception as e:
+        print str(e)
+    else:
+        return r.text
+
+
+def renew_tor_ip():
+    with Controller.from_port(port=9051) as controller:
+        controller.authenticate(password="MyStr0n9P#D")
+        controller.signal(Signal.NEWNYM)
 
 
 def create_zip():
@@ -573,8 +595,11 @@ while i < fake_reports:
         opener = urllib2.build_opener(SocksiPyHandler(socks.SOCKS5, "127.0.0.1", 9050))
         req = urllib2.Request(url, result, {'Content-Type': 'application/octet-stream'})
         opener.open(req)
+        print("[" + str(i) + " / " + str(fake_reports) + "] Report sent to " + url + " using IP " + get_current_ip())
+        renew_tor_ip()
+        time.sleep(5)
         i = i + 1
-        print("[" + str(i) + " / " + str(fake_reports) + "] Report sent to " + url)
+
     except Exception as e:
         print "An error occured: " + str(e)
 
