@@ -13,6 +13,7 @@ import argparse
 from stem import Signal
 from stem.control import Controller
 import requests
+import datetime
 
 
 fileFirstnames = "first-names.txt"
@@ -449,17 +450,13 @@ def create_cookielist():
     return glob_cookiedomains
 
 
-''' 
-Version codes taken from https://docs.microsoft.com/en-us/windows/desktop/sysinfo/operating-system-version
-For the sake of simplicity I did not add Windows XP 64 Bit since it has another version code than 32 bit version
-and the processor architecture is generated elsewhere in this script and has to fit the version code to not be suspicous
-'''
 def create_windsversion():
     versions = [["Windows 10", "10.0"],
+                ["Windows 10", "10.0s"],
                 ["Windows Server 2019", "10.0"],
                 ["Windows Server 2016", "10.0"],
                 ["Windows 8.1", "6.3"],
-                ["Windows Server 2012 R2", "6.3"],
+                ["Windows Server 2012 R2", "6.3s"],
                 ["Windows 8", "6.2"],
                 ["Windows Server 2012", "6.2"],
                 ["Windows 7", "6.1"],
@@ -595,7 +592,7 @@ while i < fake_reports:
         opener = urllib2.build_opener(SocksiPyHandler(socks.SOCKS5, "127.0.0.1", 9050))
         req = urllib2.Request(url, result, {'Content-Type': 'application/octet-stream'})
         opener.open(req)
-        print("[" + str(i) + " / " + str(fake_reports) + "] Report sent to " + url + " using IP " + get_current_ip())
+        print("[" + str(datetime.datetime.now()) + "]" + "[" + str(i) + " / " + str(fake_reports) + "] Report sent to " + url + " using IP " + get_current_ip())
         renew_tor_ip()
         time.sleep(5)
         i = i + 1
