@@ -12,7 +12,7 @@ Afterwards install the following package:<BR>
 <BR>
 `pip install PySocks`<BR>
 `pip install stem`
-'pip install requests`
+`pip install requests`
   
 Please follow these steps to make sure this script is able to change the TOR IP programmatically<BR>
 <BR>
