@@ -10,3 +10,4 @@ Please install Tor before using this script and make sure it is running and list
 
 Afterwards install the following package:
 pip install PySocks
+pip install stem
