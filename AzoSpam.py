@@ -8,6 +8,7 @@ import os
 import shutil
 import socks
 from sockshandler import SocksiPyHandler # pip install PySocks
+import argparse
 
 
 fileFirstnames = "first-names.txt"
@@ -29,7 +30,7 @@ glob_fakecredentials = []
 glob_fakesysteminfo = ""
 glob_architecture = ""
 
-fake_reports = 1000
+fake_reports = 0
 glob_count_fake_credentials = 0
 
 # Defined in index.php of the panel; Seems to be static at least all samples I saw had the same guid
@@ -37,7 +38,7 @@ unical_guid = "DV8CF101-053A-4498-98VA-EAB3719A088W-VF9A8B7AD-0FA0-4899-B4RD-D80
 
 xor_key = chr(13) + chr(10) + chr(200)
 
-url = "http://lusecproducts.top/ebuka/index.php"
+url = ""
 
 
 def create_zip():
@@ -514,6 +515,32 @@ def create_mailaddress():
     glob_email = glob_username + "@" + emails[random.randint(0, len(emails) - 1)]
     return glob_email
 
+
+# Argument parsing
+parser = argparse.ArgumentParser(description='AzoSpam - A tool to flood AzoRult 3.3 panels with fake credentials')
+parser.add_argument("panel_url", help="URL of the panel pointing to the index.php")
+parser.add_argument("report_count", help="Number of fake reports to send",type=int)
+args = parser.parse_args()
+                                  
+print args.panel_url
+print args.report_count
+
+
+print "  ___           _____                       "
+print " / _ \         /  ___|                      "
+print "/ /_\ \_______ \ `--. _ __   __ _ _ __ ___  "
+print "|  _  |_  / _ \ `--. \ '_ \ / _` | '_ ` _ \ "
+print "| | | |/ / (_) /\__/ / |_) | (_| | | | | | |"
+print "\_| |_/___\___/\____/| .__/ \__,_|_| |_| |_|"
+print "                     | |                    "
+print "                     |_|                    "
+
+url = args.panel_url
+fake_reports = args.report_count
+
+print "Starting to send " + str(fake_reports) + " reports to " + url + " ..."
+
+
 i = 0
 
 while i < fake_reports:
@@ -545,7 +572,6 @@ while i < fake_reports:
         # Post the result to the panel
         opener = urllib2.build_opener(SocksiPyHandler(socks.SOCKS5, "127.0.0.1", 9050))
         req = urllib2.Request(url, result, {'Content-Type': 'application/octet-stream'})
-        #reply = urllib2.urlopen(req)
         opener.open(req)
         i = i + 1
         print("[" + str(i) + " / " + str(fake_reports) + "] Report sent to " + url)
