@@ -11,9 +11,9 @@ Please install Tor before using this script and make sure it is running and list
 Afterwards install the following package:<BR>
 <BR>
 `pip install PySocks`<BR>
-`pip install stem`
-`pip install requests`
-  
+`pip install stem`<BR>
+`pip install requests`<BR>
+<BR>  
 Please follow these steps to make sure this script is able to change the TOR IP programmatically<BR>
 <BR>
 `$ tor --hash-password MyStr0n9P#D`<BR>
