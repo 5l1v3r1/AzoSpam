@@ -8,6 +8,17 @@ Note: This project ist still work in progress!
 # Prerequisites
 Please install Tor before using this script and make sure it is running and listening on Port 9050
 
-Afterwards install the following package:
-pip install PySocks
-pip install stem
+Afterwards install the following package:<BR>
+<BR>
+`pip install PySocks`<BR>
+`pip install stem`
+'pip install requests`
+  
+Please follow these steps to make sure this script is able to change the TOR IP programmatically<BR>
+<BR>
+`$ tor --hash-password MyStr0n9P#D`<BR>
+`16:160103B8D7BA7CFA605C9E99E5BB515D9AE71D33B3D01CE0E7747AD0DC`<BR>
+<BR>
+Add this value to `/etc/torrc` for the value `HashedControlPassword` so it reads<BR>
+`HashedControlPassword 16:160103B8D7BA7CFA605C9E99E5BB515D9AE71D33B3D01CE0E7747AD0DC`
+  
